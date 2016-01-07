@@ -23,11 +23,12 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
 #pragma mark - Google
 
 + (AFHTTPRequestOperation *)googleTranslateMessage:(NSString *)message
-                                      withSource:(NSString *)source
-                                          target:(NSString *)target
+                                        withSource:(NSString *)source
+                                            target:(NSString *)target
                                                key:(NSString *)key
                                          quotaUser:(NSString *)quotaUser
-                                      completion:(void (^)(NSString *translatedMessage, NSString *detectedSource, NSError *error))completion
+                                           referer:(NSString*)referer
+                                       completion:(void (^)(NSString *translatedMessage, NSString *detectedSource, NSError *error))completion
 {    
     NSURL *base = [NSURL URLWithString:@"https://www.googleapis.com/language/translate/v2"];
     
@@ -53,7 +54,10 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
     [queryString appendFormat:@"&q=%@", [NSString urlEncodedStringFromString:message]];
     
     NSURL *requestURL = [NSURL URLWithString:queryString relativeToURL:base];
-    NSURLRequest *request = [NSURLRequest requestWithURL:requestURL];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
+    if (referer) {
+        [request setValue:referer forHTTPHeaderField:@"Referer"];
+    }
     
     AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
     operation.responseSerializer = [AFJSONResponseSerializer serializer];
@@ -85,6 +89,7 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
 + (AFHTTPRequestOperation *)googleDetectLanguage:(NSString *)text
                                              key:(NSString *)key
                                        quotaUser:(NSString *)quotaUser
+                                         referer:(NSString*)referer
                                       completion:(void (^)(NSString *detectedSource, float confidence, NSError *error))completion
 {
     NSURL *base = [NSURL URLWithString:@"https://www.googleapis.com/language/translate/v2/detect"];
@@ -104,7 +109,10 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
     [queryString appendFormat:@"&q=%@", [NSString urlEncodedStringFromString:text]];
     
     NSURL *requestURL = [NSURL URLWithString:queryString relativeToURL:base];
-    NSURLRequest *request = [NSURLRequest requestWithURL:requestURL];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
+    if (referer) {
+        [request setValue:referer forHTTPHeaderField:@"Referer"];
+    }
     
     AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
     operation.responseSerializer = [AFJSONResponseSerializer serializer];
@@ -133,6 +141,7 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
 
 + (AFHTTPRequestOperation *)googleSupportedLanguagesWithKey:(NSString *)key
                                                   quotaUser:(NSString *)quotaUser
+                                                    referer:(NSString*)referer
                                                  completion:(void (^)(NSArray *languageCodes, NSError *error))completion
 {
     NSURL *base = [NSURL URLWithString:@"https://www.googleapis.com/language/translate/v2/languages"];
@@ -149,7 +158,10 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
         [queryString appendFormat:@"&quotaUser=%@", quotaUser];
     
     NSURL *requestURL = [NSURL URLWithString:queryString relativeToURL:base];
-    NSURLRequest *request = [NSURLRequest requestWithURL:requestURL];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
+    if (referer) {
+        [request setValue:referer forHTTPHeaderField:@"Referer"];
+    }
     
     AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
     operation.responseSerializer = [AFJSONResponseSerializer serializer];

@@ -29,15 +29,18 @@ enum
                                             target:(NSString *)target
                                                key:(NSString *)key
                                          quotaUser:(NSString *)quotaUser
+                                           referer:(NSString*)referer
                                         completion:(void (^)(NSString *translatedMessage, NSString *detectedSource, NSError *error))completion;
 
 + (AFHTTPRequestOperation *)googleDetectLanguage:(NSString *)text
                                              key:(NSString *)key
                                        quotaUser:(NSString *)quotaUser
+                                         referer:(NSString*)referer
                                       completion:(void (^)(NSString *detectedSource, float confidence, NSError *error))completion;
 
 + (AFHTTPRequestOperation *)googleSupportedLanguagesWithKey:(NSString *)key
                                                   quotaUser:(NSString *)quotaUser
+                                                    referer:(NSString*)referer
                                                  completion:(void (^)(NSArray *languageCodes, NSError *error))completion;
 
 

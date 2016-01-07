@@ -193,6 +193,7 @@ float const FGTranslatorUnknownConfidence = -1;
                                                              target:target
                                                                 key:self.googleAPIKey
                                                           quotaUser:self.quotaUser
+                                                            referer:self.referer
                                                          completion:^(NSString *translatedMessage, NSString *detectedSource, NSError *error)
         {
             if (error)
@@ -266,6 +267,7 @@ float const FGTranslatorUnknownConfidence = -1;
         self.operation = [FGTranslateRequest googleDetectLanguage:text
                                                               key:self.googleAPIKey
                                                         quotaUser:self.quotaUser
+                                                          referer:self.referer
                                                        completion:^(NSString *detectedSource, float confidence, NSError *error)
                           {
                               if (error)
@@ -351,6 +353,7 @@ float const FGTranslatorUnknownConfidence = -1;
     {
         self.operation = [FGTranslateRequest googleSupportedLanguagesWithKey:self.googleAPIKey
                                                                    quotaUser:self.quotaUser
+                                                                     referer:self.referer
                                                                   completion:^(NSArray *languageCodes, NSError *error)
         {
             if (error)

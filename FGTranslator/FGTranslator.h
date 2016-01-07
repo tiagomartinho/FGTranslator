@@ -58,6 +58,12 @@ extern float const FGTranslatorUnknownConfidence;
  */
 @property (nonatomic) NSString *quotaUser;
 
+/**
+ * Optional referer for Google api
+ */
+
+@property (nonatomic) NSString *referer;
+
 typedef void (^FGTranslatorCompletionHandler)(NSError *error, NSString *translated, NSString *sourceLanguage);
 
 /**
