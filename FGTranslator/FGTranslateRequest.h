@@ -32,6 +32,16 @@ enum
                                            referer:(NSString*)referer
                                         completion:(void (^)(NSString *translatedMessage, NSString *detectedSource, NSError *error))completion;
 
++ (AFHTTPRequestOperation *)googleTranslateMessages:(NSArray <NSString*> *)messages
+                                         withSource:(NSString *)source
+                                             target:(NSString *)target
+                                                key:(NSString *)key
+                                          quotaUser:(NSString *)quotaUser
+                                            referer:(NSString*)referer
+                                         completion:(void (^)(NSArray <NSString*> *translatedMessages,
+                                                              NSArray <NSString*> *detectedSources,
+                                                              NSError *error))completion;
+
 + (AFHTTPRequestOperation *)googleDetectLanguage:(NSString *)text
                                              key:(NSString *)key
                                        quotaUser:(NSString *)quotaUser
@@ -45,6 +55,13 @@ enum
 
 
 #pragma mark - Bing
+
++ (AFHTTPRequestOperation *)bingTranslateMessages:(NSArray <NSString*> *)messages
+                                       withSource:(NSString *)source
+                                           target:(NSString *)target
+                                         clientId:(NSString *)clientId
+                                     clientSecret:(NSString *)clientSecret
+                                       completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion;
 
 + (AFHTTPRequestOperation *)bingTranslateMessage:(NSString *)message
                                       withSource:(NSString *)source
