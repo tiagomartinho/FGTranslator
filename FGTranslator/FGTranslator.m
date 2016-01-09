@@ -166,7 +166,7 @@ float const FGTranslatorUnknownConfidence = -1;
     
     for (NSString *text in texts) {
         // check cache for existing translation
-        NSDictionary *cached = [[TMCache sharedCache] objectForKey:[self cacheKeyForText:text target:target]];
+        NSDictionary *cached = [[PINCache sharedCache] objectForKey:[self cacheKeyForText:text target:target]];
         if (cached)
         {
             NSString *cachedSource = [cached objectForKey:@"src"];
