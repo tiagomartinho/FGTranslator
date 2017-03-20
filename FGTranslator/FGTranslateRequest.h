@@ -24,14 +24,6 @@ enum
 
 #pragma mark - Google
 
-+ (AFHTTPRequestOperation *)googleTranslateMessage:(NSString *)message
-                                        withSource:(NSString *)source
-                                            target:(NSString *)target
-                                               key:(NSString *)key
-                                         quotaUser:(NSString *)quotaUser
-                                           referer:(NSString*)referer
-                                        completion:(void (^)(NSString *translatedMessage, NSString *detectedSource, NSError *error))completion;
-
 + (AFHTTPRequestOperation *)googleTranslateMessages:(NSArray <NSString*> *)messages
                                          withSource:(NSString *)source
                                              target:(NSString *)target
@@ -62,14 +54,6 @@ enum
                                          clientId:(NSString *)clientId
                                      clientSecret:(NSString *)clientSecret
                                        completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion;
-
-+ (AFHTTPRequestOperation *)bingTranslateMessage:(NSString *)message
-                                      withSource:(NSString *)source
-                                          target:(NSString *)target
-                                        clientId:(NSString *)clientId
-                                    clientSecret:(NSString *)clientSecret
-                                      completion:(void (^)(NSString *translatedMessage, NSString *detectedSource, NSError *error))completion;
-
 
 + (AFHTTPRequestOperation *)bingDetectLanguage:(NSString *)message
                                       clientId:(NSString *)clientId
