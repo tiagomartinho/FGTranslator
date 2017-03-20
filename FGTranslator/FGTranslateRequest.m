@@ -90,7 +90,7 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
         
         NSInteger code = error.code == 400 ? FGTranslationErrorBadRequest : FGTranslationErrorOther;
         NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:code userInfo:@{
-            NSLocalizedDescriptionKey: operation.responseObject[@"error"][@"errors"][0][@"message"]
+            NSLocalizedDescriptionKey: operation.responseObject[@"error"][@"errors"][0][@"message"] ?: @""
         }];
         
         completion(nil, nil, fgError);
