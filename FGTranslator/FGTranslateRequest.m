@@ -7,7 +7,6 @@
 //
 
 #import "FGTranslateRequest.h"
-#import "FGAzureToken.h"
 #import "NSString+FGTranslator.h"
 #import "XMLDictionary.h"
 #import "FGTranslator.h"
@@ -214,157 +213,53 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
 + (AFHTTPRequestOperation *)bingTranslateMessages:(NSArray <NSString*> *)messages
                                        withSource:(NSString *)source
                                            target:(NSString *)target
-                                         clientId:(NSString *)clientId
-                                     clientSecret:(NSString *)clientSecret
+                                           apiKey:(NSString *)apiKey
                                        completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion {
-    FGAzureToken *token = [FGTranslateRequest azureToken];
-    if ([token isValid])
-    {
-        return [FGTranslateRequest doBingTranslateMessages:messages
-                                                withSource:source
-                                                    target:target
-                                                     token:token
-                                                completion:completion];
-    }
-    else
-    {
-        __block AFHTTPRequestOperation *operation;
-        operation = [FGTranslateRequest getBingAuthTokenWithId:clientId secret:clientSecret completion:^(FGAzureToken *token, NSError *error) {
-            if (!error)
-            {
-                [FGTranslateRequest setAzureToken:token];
-                operation = [FGTranslateRequest doBingTranslateMessages:messages withSource:source target:target token:token completion:completion];
-            }
-            else
-            {
-                NSLog(@"FGTranslator: failed Bing translate: %@", operation.responseObject);
-                
-                NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorNoToken userInfo:error.userInfo];
-                completion(nil, nil, fgError);
-            }
-        }];
-        
-        return operation;
-    }
-}
 
-+ (AFHTTPRequestOperation *)bingDetectLanguage:(NSString *)message
-                                      clientId:(NSString *)clientId
-                                  clientSecret:(NSString *)clientSecret
-                                    completion:(void (^)(NSString *detectedLanguage, float confidence, NSError *error))completion
-{
-    FGAzureToken *token = [FGTranslateRequest azureToken];
-    if ([token isValid])
-    {
-        return [FGTranslateRequest doBingDetectLanguage:message
-                                                  token:token
-                                             completion:completion];
-    }
-    else
-    {
-        __block AFHTTPRequestOperation *operation;
-        operation = [FGTranslateRequest getBingAuthTokenWithId:clientId secret:clientSecret completion:^(FGAzureToken *token, NSError *error) {
-            if (!error)
-            {
-                [FGTranslateRequest setAzureToken:token];
-                operation = [FGTranslateRequest doBingDetectLanguage:message
-                                                               token:token
-                                                          completion:completion];
-            }
-            else
-            {
-                NSLog(@"FGTranslator: failed Bing language detection: %@", operation.responseObject);
-                
-                NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorNoToken userInfo:error.userInfo];
-                completion(nil, 0, fgError);
-            }
-        }];
-        
-        return operation;
-    }
-}
+    NSMutableString *queryString = [NSMutableString stringWithString:@"api-version=3.0"];
 
-+ (AFHTTPRequestOperation *)bingSupportedLanguagesWithClienId:(NSString *)clientId
-                                                 clientSecret:(NSString *)clientSecret
-                                                   completion:(void (^)(NSArray *languageCodes, NSError *error))completion
-{
-    FGAzureToken *token = [FGTranslateRequest azureToken];
-    if ([token isValid])
-    {
-        return [FGTranslateRequest doBingSupportedLanguagesWithToken:token completion:completion];
-    }
-    else
-    {
-        __block AFHTTPRequestOperation *operation;
-        operation = [FGTranslateRequest getBingAuthTokenWithId:clientId secret:clientSecret completion:^(FGAzureToken *token, NSError *error) {
-            if (!error)
-            {
-                [FGTranslateRequest setAzureToken:token];
-                operation = [FGTranslateRequest doBingSupportedLanguagesWithToken:token completion:completion];
-            }
-            else
-            {
-                NSLog(@"FGTranslator: failed Bing supported languages:%@", operation.responseObject);
-                
-                NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorNoToken userInfo:error.userInfo];
-                completion(nil, fgError);
-            }
-        }];
-        
-        return operation;
-    }
-}
-
-+ (AFHTTPRequestOperation *)doBingTranslateMessages:(NSArray <NSString*> *)messages
-                                         withSource:(NSString *)source
-                                             target:(NSString *)target
-                                              token:(FGAzureToken *)token
-                                         completion:(void (^)(NSArray <NSString*> *translatedMessages, NSArray <NSString*> *detectedSources, NSError *error))completion {
-    
-    NSMutableString *queryString = [NSMutableString string];
-    
     // target language
-    [queryString appendFormat:@"to=%@", target];
-    
+    [queryString appendFormat:@"&to=%@", target];
+
     // source language
     if (source)
         [queryString appendFormat:@"&from=%@", source];
-    
+
     // message
-    NSMutableArray *encodedMessages = [NSMutableArray arrayWithCapacity:messages.count];
+
+    NSMutableArray <NSDictionary<NSString*, NSString*>*> *reqBody = [NSMutableArray arrayWithCapacity:messages.count];
     for (NSString *message in messages) {
-        [encodedMessages addObject:[NSString urlEncodedStringFromString:message]];
+        [reqBody addObject:@{@"text": message}];
     }
-    NSError *error = nil;
-    [queryString appendFormat:@"&texts=%@",[NSString urlEncodedStringFromString:
-                                            [[NSString alloc] initWithData:[NSJSONSerialization dataWithJSONObject:messages
-                                                                           options:0
-                                                                             error:&error]
-                                                                 encoding:NSUTF8StringEncoding]]];
-    
-    [queryString appendString:@"&contentType=text/plain"];
-    
-    NSURL *requestURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://api.microsofttranslator.com/V2/Ajax.svc/TranslateArray?%@", queryString]];
+
+    NSURL *requestURL = [NSURL URLWithString:[NSString stringWithFormat:@"https://api.cognitive.microsofttranslator.com/translate?%@", queryString]];
 
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
-    
-    NSString *authString = [NSString stringWithFormat:@"bearer %@", token.token];
-    [request setValue:authString forHTTPHeaderField:@"Authorization"];
-    
+    [request setHTTPMethod:@"POST"];
+    [request setValue:apiKey forHTTPHeaderField:@"Ocp-Apim-Subscription-Key"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
+    NSError *error = nil;
+
+    [request setHTTPBody:[NSJSONSerialization dataWithJSONObject:reqBody
+                                                         options:0
+                                                           error:&error]];
+
     AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
     operation.responseSerializer = [AFJSONResponseSerializer serializer];
-    
+
     // Microsoft doesn't like standard
-    operation.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"application/x-javascript"];
-    
+    operation.responseSerializer.acceptableContentTypes = [NSSet setWithObject:@"application/json"];
+
     [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, NSArray *responseObject)
      {
          NSMutableArray *translated = [NSMutableArray array];
          NSMutableArray *sources = [NSMutableArray array];
-         
+
          for (NSDictionary *dict in responseObject) {
-             [translated addObject:[dict objectForKey:@"TranslatedText"]];
-             [sources addObject:[dict objectForKey:@"From"]];
+             NSArray *translations = dict[@"translations"];
+             [translated addObject:translations[0][@"text"]];
+             [sources addObject:source];
          }
          completion(translated, sources, nil);
      }
@@ -373,146 +268,9 @@ NSString *const FG_TRANSLATOR_AZURE_TOKEN_EXPIRY = @"FG_TRANSLATOR_AZURE_TOKEN_E
          NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorOther userInfo:error.userInfo];
          completion(nil, nil, fgError);
      }];
-    
+
     [operation start];
     return operation;
-}
-
-+ (AFHTTPRequestOperation *)doBingDetectLanguage:(NSString *)message
-                                           token:(FGAzureToken *)token
-                                      completion:(void (^)(NSString *detectedSource, float confidence, NSError *error))completion
-{
-    NSURL *base = [NSURL URLWithString:@"https://api.microsofttranslator.com/V2/Http.svc/Detect"];
-    
-    NSMutableString *queryString = [NSMutableString string];
-    
-    // message
-    [queryString appendFormat:@"?text=%@", [NSString urlEncodedStringFromString:message]];
-    
-    NSURL *requestURL = [NSURL URLWithString:queryString relativeToURL:base];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
-    
-    NSString *authString = [NSString stringWithFormat:@"bearer %@", token.token];
-    [request setValue:authString forHTTPHeaderField:@"Authorization"];
-    
-    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-    operation.responseSerializer = [AFXMLParserResponseSerializer serializer];
-    
-    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject)
-    {
-        XMLDictionaryParser *parser = [XMLDictionaryParser sharedInstance];
-        NSDictionary *dict = [parser dictionaryWithParser:responseObject];
-        completion([dict innerText], FGTranslatorUnknownConfidence, nil);
-    }
-                                     failure:^(AFHTTPRequestOperation *operation, NSError *error)
-    {
-        NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorOther userInfo:error.userInfo];
-        completion(nil, FGTranslatorUnknownConfidence, fgError);
-    }];
-    
-    [operation start];
-    return operation;
-}
-
-+ (AFHTTPRequestOperation *)doBingSupportedLanguagesWithToken:(FGAzureToken *)token
-                                                   completion:(void (^)(NSArray *languageCodes, NSError *error))completion
-{
-    NSURL *base = [NSURL URLWithString:@"https://api.microsofttranslator.com/V2/Http.svc/GetLanguagesForTranslate"];
-    
-    NSMutableString *queryString = [NSMutableString string];
-    
-    NSURL *requestURL = [NSURL URLWithString:queryString relativeToURL:base];
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:requestURL];
-    
-    NSString *authString = [NSString stringWithFormat:@"bearer %@", token.token];
-    [request setValue:authString forHTTPHeaderField:@"Authorization"];
-    
-    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-    operation.responseSerializer = [AFXMLParserResponseSerializer serializer];
-    
-    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject)
-    {
-        XMLDictionaryParser *parser = [XMLDictionaryParser sharedInstance];
-        NSDictionary *dict = [parser dictionaryWithParser:responseObject];
-        NSArray *codes = [dict objectForKey:@"string"];
-        completion(codes, nil);
-    }
-                                     failure:^(AFHTTPRequestOperation *operation, NSError *error)
-    {
-         NSError *fgError = [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:FGTranslationErrorOther userInfo:error.userInfo];
-         completion(nil, fgError);
-    }];
-    
-    [operation start];
-    return operation;
-}
-
-+ (AFHTTPRequestOperation *)getBingAuthTokenWithId:(NSString *)clientId
-                                            secret:(NSString *)clientSecret
-                                        completion:(void (^)(FGAzureToken *token, NSError *error))completion
-{
-    NSURL *base = [NSURL URLWithString:@"https://datamarket.accesscontrol.windows.net/v2/OAuth2-13"];
-    
-    NSMutableString *queryString = [NSMutableString string];
-    [queryString appendFormat:@"client_id=%@", clientId];
-    [queryString appendFormat:@"&client_secret=%@", [NSString urlEncodedStringFromString:clientSecret]];
-    [queryString appendString:@"&scope=http://api.microsofttranslator.com"];
-    [queryString appendString:@"&grant_type=client_credentials"];
-    
-    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:base];
-    request.HTTPMethod = @"POST";
-    request.HTTPBody = [queryString dataUsingEncoding:NSUTF8StringEncoding];
-    
-    AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
-    operation.responseSerializer = [AFJSONResponseSerializer serializer];
-    
-    [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject)
-    {
-        NSString *token = [responseObject objectForKey:@"access_token"];
-        NSTimeInterval expiry = [[responseObject objectForKey:@"expires_in"] doubleValue];
-        NSDate *expiration = [NSDate dateWithTimeIntervalSinceNow:expiry];
-        
-        FGAzureToken *azureToken = [[FGAzureToken alloc] initWithToken:token expiry:expiration];
-        
-        completion(azureToken, nil);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error)
-    {
-        completion(nil, error);
-    }];
-    [operation start];
-    
-    return operation;
-}
-
-
-#pragma mark - Misc
-
-+ (void)flushCredentials
-{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults removeObjectForKey:FG_TRANSLATOR_AZURE_TOKEN];
-    [defaults removeObjectForKey:FG_TRANSLATOR_AZURE_TOKEN_EXPIRY];
-    [defaults synchronize];
-}
-
-+ (void)setAzureToken:(FGAzureToken *)azureToken
-{
-    if (!azureToken)
-        return;
-    
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:azureToken.token forKey:FG_TRANSLATOR_AZURE_TOKEN];
-    [defaults setObject:azureToken.expiry forKey:FG_TRANSLATOR_AZURE_TOKEN_EXPIRY];
-    [defaults synchronize];
-}
-
-+ (FGAzureToken *)azureToken
-{
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSString *token = [defaults stringForKey:FG_TRANSLATOR_AZURE_TOKEN];
-    NSDate *expiry = [defaults objectForKey:FG_TRANSLATOR_AZURE_TOKEN_EXPIRY];
-    
-    return [[FGAzureToken alloc] initWithToken:token expiry:expiry];
 }
 
 @end

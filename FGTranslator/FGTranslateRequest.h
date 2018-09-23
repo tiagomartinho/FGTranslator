@@ -51,21 +51,7 @@ enum
 + (AFHTTPRequestOperation *)bingTranslateMessages:(NSArray <NSString*> *)messages
                                        withSource:(NSString *)source
                                            target:(NSString *)target
-                                         clientId:(NSString *)clientId
-                                     clientSecret:(NSString *)clientSecret
+                                           apiKey:(NSString *)apiKey
                                        completion:(void (^)(NSArray <NSString*> *translatedMessage, NSArray <NSString*> *detectedSource, NSError *error))completion;
-
-+ (AFHTTPRequestOperation *)bingDetectLanguage:(NSString *)message
-                                      clientId:(NSString *)clientId
-                                  clientSecret:(NSString *)clientSecret
-                                    completion:(void (^)(NSString *detectedLanguage, float confidence, NSError *error))completion;
-
-+ (AFHTTPRequestOperation *)bingSupportedLanguagesWithClienId:(NSString *)clientId
-                                                 clientSecret:(NSString *)clientSecret
-                                                   completion:(void (^)(NSArray *languageCodes, NSError *error))completion;
-
-#pragma mark - Misc
-
-+ (void)flushCredentials;
 
 @end

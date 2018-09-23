@@ -44,11 +44,7 @@ extern float const FGTranslatorUnknownConfidence;
 /**
  * Bing Azure client ID, if any.
  */
-@property (nonatomic, readonly) NSString *azureClientId;
-/**
- * Bing Azure client secret, if any.
- */
-@property (nonatomic, readonly) NSString *azureClientSecret;
+@property (nonatomic, readonly) NSString *azureAPIKey;
 
 /**
  * Optional quota throttle to use use with Google Translate.
@@ -84,7 +80,7 @@ typedef void (^FGTranslatorMultipleCompletionHandler)(NSError *error, NSArray <N
  
  * @return FGTranslator instance.
  */
-- (id)initWithBingAzureClientId:(NSString *)clientId secret:(NSString *)secret;
+- (id)initWithAzureAPIKey:(NSString *)apiKey;
 
 /**
  * Translate text.
@@ -129,21 +125,6 @@ typedef void (^FGTranslatorMultipleCompletionHandler)(NSError *error, NSArray <N
             completion:(FGTranslatorMultipleCompletionHandler)completion;
 
 /**
- * Detect text language.
- 
- * @param text Text to analyze.
- * @param completion Completion handler.
- */
-- (void)detectLanguage:(NSString *)text
-            completion:(void (^)(NSError *error, NSString *detectedSource, float confidence))completion;
-
-/**
- * Return a list of languages supported by either the Google or Bing service.
- * @param completion completion handler
- */
-- (void)supportedLanguages:(void (^)(NSError *error, NSArray *languageCodes))completion;
-
-/**
  * Cancels the current translation.
  */
 - (void)cancel;
@@ -154,12 +135,5 @@ typedef void (^FGTranslatorMultipleCompletionHandler)(NSError *error, NSArray <N
  * Previous translation results are cached (on a per-target-language basis). Call this function to clear the cache.
  */
 + (void)flushCache;
-
-/**
- Flush Azure credentials.
- 
- This deletes the existing token, if any.
- */
-+ (void)flushCredentials;
 
 @end
