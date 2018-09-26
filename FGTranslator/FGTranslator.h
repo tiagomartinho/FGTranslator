@@ -75,9 +75,7 @@ typedef void (^FGTranslatorMultipleCompletionHandler)(NSError *error, NSArray <N
 /**
  * Initialize translator with Bing Translate.
  
- * @param clientId Azure client ID
- * @param clientSecret Azure client secret
- 
+ * @param apiKey Azure API Key
  * @return FGTranslator instance.
  */
 - (id)initWithAzureAPIKey:(NSString *)apiKey;
@@ -123,6 +121,11 @@ typedef void (^FGTranslatorMultipleCompletionHandler)(NSError *error, NSArray <N
             withSource:(NSString*)source
                 target:(NSString*)target
             completion:(FGTranslatorMultipleCompletionHandler)completion;
+
+- (void)chunkedTranslateTexts:(NSArray <NSString*> *)texts
+                   withSource:(NSString*)source
+                       target:(NSString*)target
+                   completion:(void(^)(NSError *error, NSArray<NSString*>* translated))completion;
 
 /**
  * Cancels the current translation.

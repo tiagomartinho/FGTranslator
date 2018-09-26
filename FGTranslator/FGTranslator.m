@@ -36,9 +36,9 @@ float const FGTranslatorUnknownConfidence = -1;
 @property (nonatomic) NSString *googleAPIKey;
 @property (nonatomic) NSString *azureAPIKey;
 
-@property (nonatomic) FGTranslatorState translatorState;
+//@property (nonatomic) FGTranslatorState translatorState;
 
-@property (nonatomic) AFHTTPRequestOperation *operation;
+@property (nonatomic) NSMutableArray <AFHTTPRequestOperation*> *operations;
 @property (nonatomic, copy) FGTranslatorCompletionHandler completionHandler;
 
 @end
@@ -53,7 +53,7 @@ float const FGTranslatorUnknownConfidence = -1;
     {
         self.googleAPIKey = key;
     }
-    
+
     return self;
 }
 
@@ -64,7 +64,7 @@ float const FGTranslatorUnknownConfidence = -1;
     {
         self.azureAPIKey = apiKey;
     }
-    
+
     return self;
 }
 
@@ -74,13 +74,14 @@ float const FGTranslatorUnknownConfidence = -1;
     if (self)
     {
         self.preferSourceGuess = YES;
-        self.translatorState = FGTranslatorStateInitial;
-        
+        self.operations = [NSMutableArray array];
+//        self.translatorState = FGTranslatorStateInitial;
+
         // limit translation cache to 5 MB
         PINCache *cache = [PINCache sharedCache];
         cache.diskCache.byteLimit = 5000000;
     }
-    
+
     return self;
 }
 
@@ -94,13 +95,13 @@ float const FGTranslatorUnknownConfidence = -1;
 - (NSString *)cacheKeyForText:(NSString *)text target:(NSString *)target
 {
     NSParameterAssert(text);
-    
+
     NSMutableString *cacheKey = [NSMutableString stringWithString:text];
-    
+
     if (target) {
         [cacheKey appendFormat:@"|%@", target];
     }
-    
+
     switch (self.translationServiceType) {
         case FGTranslatorServiceTypeGoogle:
             [cacheKey appendFormat:@"|Google"];
@@ -111,7 +112,7 @@ float const FGTranslatorUnknownConfidence = -1;
         default:
             break;
     }
-    
+
     return cacheKey;
 }
 
@@ -119,12 +120,12 @@ float const FGTranslatorUnknownConfidence = -1;
 {
     if (!text || !translated)
         return;
-    
+
     NSMutableDictionary *cached = [NSMutableDictionary new];
     [cached setObject:translated forKey:@"txt"];
     if (source)
         [cached setObject:source forKey:@"src"];
-    
+
     [[PINCache sharedCache] setObject:cached forKey:[self cacheKeyForText:text target:target]];
 }
 
@@ -147,6 +148,28 @@ float const FGTranslatorUnknownConfidence = -1;
               }];
 }
 
+
+- (void)chunkedTranslateTexts:(NSArray <NSString*> *)texts
+                   withSource:(NSString*)source
+                       target:(NSString*)target
+                   completion:(void(^)(NSError *error, NSArray<NSString*>*))completion {
+    NSUInteger chunkLength = self.translationServiceType == FGTranslatorServiceTypeMicrosoft ? 25 :
+                             self.translationServiceType == FGTranslatorServiceTypeGoogle ? 200 :
+                             INT_MAX;
+    [self chunkedTranslationsWithTexts:texts
+                        chunkCondition:^BOOL(NSArray<NSString *> *texts, NSString *thisText) {
+                            return texts.count >= chunkLength;
+                        } translate:^(NSArray<NSString *> *texts, void (^callback)(NSError *error, NSArray<NSString *> *results)) {
+                            [self translateTexts:texts
+                                      withSource:source
+                                          target:target completion:^(NSError *error, NSArray<NSString *> *translated, NSArray<NSString *> *sourceLanguage) {
+                                              callback(error, translated);
+                                          }];
+                        } complete:^(NSError *error, NSArray<NSString *> *translated) {
+                            completion(error, translated);
+                        }];
+}
+
 - (void)translateTexts:(NSArray <NSString*> *)texts
             withSource:(NSString*)source
                 target:(NSString*)target
@@ -156,6 +179,8 @@ float const FGTranslatorUnknownConfidence = -1;
         return;
     }
     
+    // TODO: Make this class support multiple operation at the same time
+
     if (self.translationServiceType == FGTranslatorServiceTypeUnknown)
     {
         NSError *error = [self errorWithCode:FGTranslatorErrorMissingCredentials
@@ -163,28 +188,11 @@ float const FGTranslatorUnknownConfidence = -1;
         completion(error, nil, nil);
         return;
     }
-    
-    if (self.translatorState == FGTranslatorStateInProgress)
-    {
-        NSError *error = [self errorWithCode:FGTranslatorErrorTranslationInProgress description:@"translation already in progress"];
-        completion(error, nil, nil);
-        return;
-    }
-    else if (self.translatorState == FGTranslatorStateCompleted)
-    {
-        NSError *error = [self errorWithCode:FGTranslatorErrorAlreadyTranslated description:@"translation already completed"];
-        completion(error, nil, nil);
-        return;
-    }
-    else
-    {
-        self.translatorState = FGTranslatorStateInProgress;
-    }
-    
+
     NSMutableArray *cachedSources = [NSMutableArray arrayWithCapacity:texts.count];
     NSMutableArray *cachedTranslations = [NSMutableArray arrayWithCapacity:texts.count];
     NSMutableArray *textsToTranslate = [NSMutableArray array];
-    
+
     for (NSString *text in texts) {
         // check cache for existing translation
         NSDictionary *cached = [[PINCache sharedCache] objectForKey:[self cacheKeyForText:text target:target]];
@@ -192,9 +200,9 @@ float const FGTranslatorUnknownConfidence = -1;
         {
             NSString *cachedSource = [cached objectForKey:@"src"];
             NSString *cachedTranslation = [cached objectForKey:@"txt"];
-            
+
             NSLog(@"FGTranslator: returning cached translation");
-            
+
             [cachedSources addObject:cachedSource ?: [NSNull null]];
             [cachedTranslations addObject:cachedTranslation];
         } else {
@@ -203,36 +211,36 @@ float const FGTranslatorUnknownConfidence = -1;
             [textsToTranslate addObject:text];
         }
     }
-    
+
     source = [self filteredLanguageCodeFromCode:source];
     if (!target)
         target = [self filteredLanguageCodeFromCode:[[NSLocale preferredLanguages] objectAtIndex:0]];
-    
+
     if ([[source lowercaseString] isEqualToString:target])
         source = nil;
-    
+
     if (self.preferSourceGuess && [self shouldGuessSourceWithText:[texts objectAtIndex:0]])
         source = nil;
-    
+
     void (^translateCompletion)(NSArray<NSString *> *, NSArray<NSString *> *, NSError *) = ^(NSArray<NSString *> *translatedMessages, NSArray<NSString *> *detectedSources, NSError *error) {
         if (error) {
             completion(error, nil, nil);
             return;
         }
-        
+
         for (NSInteger i = 0; i < translatedMessages.count; i++) {
             NSString *translated = translatedMessages[i];
             NSString *source = detectedSources[i];
-            
+
             [self cacheText:textsToTranslate[i]
                  translated:translated
                      source:source
                      target:target];
         }
-        
+
         NSMutableArray *translated = [NSMutableArray arrayWithArray:translatedMessages];
         NSMutableArray *detected = [NSMutableArray arrayWithArray:detectedSources];
-        
+
         // merge translated text into cached array
         for (NSInteger i = 0; i < cachedTranslations.count; i++) {
             NSString *cached = [cachedTranslations objectAtIndex:i];
@@ -254,30 +262,40 @@ float const FGTranslatorUnknownConfidence = -1;
         translateCompletion(@[], @[], nil);
         return;
     }
-    
+
     switch (self.translationServiceType) {
-        case FGTranslatorServiceTypeGoogle:
-            self.operation = [FGTranslateRequest googleTranslateMessages:textsToTranslate
-                                                              withSource:source
-                                                                  target:target
-                                                                     key:self.googleAPIKey
-                                                               quotaUser:self.quotaUser
-                                                                 referer:self.referer
-                                                              completion:translateCompletion];
+        case FGTranslatorServiceTypeGoogle: {
+            __block AFHTTPRequestOperation *operation = [FGTranslateRequest googleTranslateMessages:textsToTranslate
+                                             withSource:source
+                                                 target:target
+                                                    key:self.googleAPIKey
+                                              quotaUser:self.quotaUser
+                                                referer:self.referer
+                                             completion:^(NSArray<NSString *> *translatedMessages, NSArray<NSString *> *detectedSources, NSError *error) {
+                                                 translateCompletion(translatedMessages, detectedSources, error);
+                                                 [self.operations removeObject:operation];
+                                             }];
+            [self.operations addObject:operation];
+        }
             break;
-        case FGTranslatorServiceTypeMicrosoft:
-            self.operation = [FGTranslateRequest bingTranslateMessages:textsToTranslate
-                                                            withSource:source
-                                                                target:target
-                                                                apiKey:self.azureAPIKey
-                                                            completion:translateCompletion];
+        case FGTranslatorServiceTypeMicrosoft: {
+            __block AFHTTPRequestOperation *operation = [FGTranslateRequest bingTranslateMessages:textsToTranslate
+                                           withSource:source
+                                               target:target
+                                               apiKey:self.azureAPIKey
+                                           completion:^(NSArray<NSString *> *translatedMessages, NSArray<NSString *> *detectedSource, NSError *error) {
+                                               translateCompletion(translatedMessages, detectedSource, error);
+                                               [self.operations removeObject:operation];
+                                           }];
+            [self.operations addObject:operation];
+            }
             break;
         default: {
             NSError *error = [self errorWithCode:FGTranslatorErrorMissingCredentials
                                      description:@"missing Google or Bing credentials"];
             completion(error, nil, nil);
-            
-            self.translatorState = FGTranslatorStateCompleted;
+
+//            self.translatorState = FGTranslatorStateCompleted;
         }
             break;
     }
@@ -286,7 +304,7 @@ float const FGTranslatorUnknownConfidence = -1;
 - (void)handleError:(NSError *)error
 {
     FGTranslatorError errorState = error.code == FGTranslationErrorBadRequest ? FGTranslatorErrorUnableToTranslate : FGTranslatorErrorNetworkError;
-    
+
     NSError *fgError = [self errorWithCode:errorState description:nil];
     if (self.completionHandler)
         self.completionHandler(fgError, nil, nil);
@@ -304,7 +322,9 @@ float const FGTranslatorUnknownConfidence = -1;
 - (void)cancel
 {
     self.completionHandler = nil;
-    [self.operation cancel];
+    for (AFHTTPRequestOperation *operation in self.operations) {
+        [operation cancel];
+    }
 }
 
 
@@ -329,7 +349,7 @@ float const FGTranslatorUnknownConfidence = -1;
     NSDictionary *userInfo = nil;
     if (description)
         userInfo = [NSDictionary dictionaryWithObject:description forKey:NSLocalizedDescriptionKey];
-    
+
     return [NSError errorWithDomain:FG_TRANSLATOR_ERROR_DOMAIN code:code userInfo:userInfo];
 }
 
@@ -339,7 +359,7 @@ float const FGTranslatorUnknownConfidence = -1;
 {
     if (!code || code.length <= 3)
         return code;
-    
+
     if ([code isEqualToString:@"zh-Hant"] || [code isEqualToString:@"zh-TW"])
         return @"zh-TW";
     else if ([code hasSuffix:@"input"])
@@ -349,7 +369,6 @@ float const FGTranslatorUnknownConfidence = -1;
         // trim stuff like en-GB to just en which Google Translate understands
         return [code substringToIndex:2];
 }
-
 #pragma mark - Batch and fallback
 
 - (void)cachedTranslationsWithTexts:(NSArray <NSString*> *)texts
@@ -397,11 +416,10 @@ float const FGTranslatorUnknownConfidence = -1;
     NSMutableArray *allTexts = [NSMutableArray arrayWithArray:texts];
     NSMutableArray <NSArray<NSString*>*> *chunks = [NSMutableArray array];
     while (allTexts.count) {
-        NSUInteger chunkTextLength = 0;
         NSMutableArray *thisChunkTexts = [NSMutableArray array];
         while (allTexts.count) {
             NSString *thisText = allTexts[0];
-            if (thisChunkTexts.count /* Dont allow empty chunk */ && condition(thisChunkTexts, thisText)) {
+            if (!thisChunkTexts.count /* Dont allow empty chunk */ || condition(thisChunkTexts, thisText)) {
                 [thisChunkTexts addObject:thisText];
                 [allTexts removeObjectAtIndex:0];
             } else {
@@ -410,7 +428,7 @@ float const FGTranslatorUnknownConfidence = -1;
         }
         [chunks addObject:thisChunkTexts];
     }
-    
+
     NSMutableArray *errors = [NSMutableArray arrayWithCapacity:chunks.count];
     NSMutableArray *translatedChunks = [NSMutableArray arrayWithCapacity:chunks.count];
     NSLock *errorArrayLock = [[NSLock alloc] init];
