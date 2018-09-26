@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.author       = { "George Polak" => "george.polak@gmail.com" }
 
   s.ios.deployment_target = "7.0"
-  s.osx.deployment_target = "10.8"
+  s.osx.deployment_target = "10.9"
 
   s.source       = { :git => "https://github.com/gpolak/FGTranslator.git", :tag => "1.1.2" }
 
