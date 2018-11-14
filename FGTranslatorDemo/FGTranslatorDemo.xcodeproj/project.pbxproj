@@ -17,7 +17,6 @@
 		5ECA5B85199AE40900C9C378 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5ECA5B83199AE40900C9C378 /* Main.storyboard */; };
 		5ECA5B88199AE40900C9C378 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA5B87199AE40900C9C378 /* ViewController.m */; };
 		5ECA5B8A199AE40900C9C378 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5ECA5B89199AE40900C9C378 /* Images.xcassets */; };
-		5ECA5BAB199AE8CB00C9C378 /* FGAzureToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA5BA8199AE8CB00C9C378 /* FGAzureToken.m */; };
 		5ECA5BAC199AE8CB00C9C378 /* FGTranslator.m in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA5BAA199AE8CB00C9C378 /* FGTranslator.m */; };
 		5ECA5BAF199AEDFD00C9C378 /* FGTranslateRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA5BAE199AEDFD00C9C378 /* FGTranslateRequest.m */; };
 		5ECA5BB2199AEF0A00C9C378 /* NSString+FGTranslator.m in Sources */ = {isa = PBXBuildFile; fileRef = 5ECA5BB1199AEF0A00C9C378 /* NSString+FGTranslator.m */; };
@@ -43,8 +42,6 @@
 		5ECA5B87199AE40900C9C378 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		5ECA5B89199AE40900C9C378 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		5ECA5B90199AE40900C9C378 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		5ECA5BA7199AE8CB00C9C378 /* FGAzureToken.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FGAzureToken.h; sourceTree = "<group>"; };
-		5ECA5BA8199AE8CB00C9C378 /* FGAzureToken.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FGAzureToken.m; sourceTree = "<group>"; };
 		5ECA5BA9199AE8CB00C9C378 /* FGTranslator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FGTranslator.h; sourceTree = "<group>"; };
 		5ECA5BAA199AE8CB00C9C378 /* FGTranslator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FGTranslator.m; sourceTree = "<group>"; };
 		5ECA5BAD199AEDFD00C9C378 /* FGTranslateRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FGTranslateRequest.h; sourceTree = "<group>"; };
@@ -139,8 +136,6 @@
 			isa = PBXGroup;
 			children = (
 				4EA9B61A199BD2F10025C8C6 /* XMLDictionary */,
-				5ECA5BA7199AE8CB00C9C378 /* FGAzureToken.h */,
-				5ECA5BA8199AE8CB00C9C378 /* FGAzureToken.m */,
 				5ECA5BA9199AE8CB00C9C378 /* FGTranslator.h */,
 				5ECA5BAA199AE8CB00C9C378 /* FGTranslator.m */,
 				5ECA5BAD199AEDFD00C9C378 /* FGTranslateRequest.h */,
@@ -192,6 +187,11 @@
 			attributes = {
 				LastUpgradeCheck = 0720;
 				ORGANIZATIONNAME = "George Polak";
+				TargetAttributes = {
+					5ECA5B6D199AE40800C9C378 = {
+						DevelopmentTeam = R5WNMS7P79;
+					};
+				};
 			};
 			buildConfigurationList = 5ECA5B69199AE40800C9C378 /* Build configuration list for PBXProject "FGTranslatorDemo" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -282,7 +282,6 @@
 				5ECA5BAF199AEDFD00C9C378 /* FGTranslateRequest.m in Sources */,
 				5ECA5BB2199AEF0A00C9C378 /* NSString+FGTranslator.m in Sources */,
 				5ECA5B82199AE40900C9C378 /* AppDelegate.m in Sources */,
-				5ECA5BAB199AE8CB00C9C378 /* FGAzureToken.m in Sources */,
 				5ECA5BAC199AE8CB00C9C378 /* FGTranslator.m in Sources */,
 				5ECA5B7E199AE40900C9C378 /* main.m in Sources */,
 			);
@@ -343,7 +342,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
@@ -375,7 +374,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};

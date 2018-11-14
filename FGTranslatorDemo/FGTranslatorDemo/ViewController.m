@@ -29,7 +29,6 @@
     
     // not needed in production code, but making sure the demo is clean on each run
     [FGTranslator flushCache];
-    [FGTranslator flushCredentials];
 }
 
 - (FGTranslator *)translator {
@@ -39,7 +38,7 @@
      * Note: The client id and secret here is very limited and is included for demo purposes only.
      * You must use your own credentials for production apps.
      */
-    FGTranslator *translator = [[FGTranslator alloc] initWithBingAzureClientId:@"fgtranslator-demo" secret:@"GrsgBiUCKACMB+j2TVOJtRboyRT8Q9WQHBKJuMKIxsU="];
+    FGTranslator *translator = [[FGTranslator alloc] initWithAzureAPIKey:@"GrsgBiUCKACMB+j2TVOJtRboyRT8Q9WQHBKJuMKIxsU="];
     
     // or use Google Translate
     
@@ -97,7 +96,7 @@
     
     [self.textView resignFirstResponder];
     
-    
+    /*
     [self.translator detectLanguage:self.textView.text completion:^(NSError *error, NSString *detectedSource, float confidence)
     {
         if (error)
@@ -124,6 +123,7 @@
             [SVProgressHUD dismiss];
         }
     }];
+     // */
 }
 
 - (IBAction)supportedLanguages:(id)sender
@@ -131,7 +131,8 @@
     [SVProgressHUD show];
     
     [self.textView resignFirstResponder];
-    
+
+    /*
     [self.translator supportedLanguages:^(NSError *error, NSArray *languageCodes)
     {
         if (error)
@@ -157,6 +158,7 @@
             [SVProgressHUD dismiss];
         }
     }];
+    // */
 }
 
 - (void)showErrorWithError:(NSError *)error
