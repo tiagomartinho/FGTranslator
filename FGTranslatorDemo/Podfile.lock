@@ -20,17 +20,36 @@ PODS:
   - AFNetworking/UIKit (2.6.3):
     - AFNetworking/NSURLConnection
     - AFNetworking/NSURLSession
-  - PINCache (2.1.2)
-  - SVProgressHUD (HEAD based on 2.0-beta)
+  - FGTranslator (1.2):
+    - AFNetworking (~> 2.0)
+    - PINCache
+    - XMLDictionary (~> 1.4)
+  - PINCache (2.3)
+  - SVProgressHUD (2.2.5)
+  - XMLDictionary (1.4.1)
 
 DEPENDENCIES:
-  - AFNetworking (~> 2.0)
-  - PINCache (~> 2.1)
-  - SVProgressHUD (HEAD)
+  - FGTranslator (from `../`)
+  - SVProgressHUD
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - AFNetworking
+    - PINCache
+    - SVProgressHUD
+    - XMLDictionary
+
+EXTERNAL SOURCES:
+  FGTranslator:
+    :path: "../"
 
 SPEC CHECKSUMS:
   AFNetworking: cb8d14a848e831097108418f5d49217339d4eb60
-  PINCache: 9e70271f1bdd60c0465b7208adcc4b6acc1fc376
-  SVProgressHUD: c83337f10ed32d701c423d519059a249973c8662
+  FGTranslator: cefb376b04bddeecf549ac3f69dd01959adb053c
+  PINCache: ce36ed282031b92fc7733ffe831f474ff80fddc2
+  SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
+  XMLDictionary: fa07b6ff422b3a91d47a5de9bc82e3fc04fbd167
 
-COCOAPODS: 0.39.0
+PODFILE CHECKSUM: 998bd38e5e32135dd53b6e6df59ba68f947e093b
+
+COCOAPODS: 1.5.3

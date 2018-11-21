@@ -9,8 +9,8 @@
 #import "FGTranslator.h"
 #import "FGTranslateRequest.h"
 #import "NSString+FGTranslator.h"
-#import "AFNetworking.h"
-#import "PINCache.h"
+#import <AFNetworking/AFNetworking.h>
+#import <PINCache/PINCache.h>
 
 typedef NSInteger FGTranslatorState;
 
